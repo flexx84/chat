@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>판다 골프채 채팅 생성기</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 450px;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .controls {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        .gender-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .gender-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .generate-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+        
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .generate-btn:active {
+            transform: translateY(0);
+        }
+        
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            animation: messageSlide 0.3s ease-out;
+            clear: both;
+        }
+        
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .message.buyer {
+            justify-content: flex-start;
+        }
+        
+        .message.seller {
+            justify-content: flex-end;
+        }
+        
+        .message-content {
+            max-width: 75%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .message-bubble {
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+        
+        .buyer .message-bubble {
+            background: white;
+            border: 1px solid #e1e5e9;
+            color: #333;
+            border-bottom-left-radius: 6px;
+        }
+        
+        .seller .message-bubble {
+            background: #007bff;
+            color: white;
+            border-bottom-right-radius: 6px;
+        }
+        
+        .sender-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+        
+        .buyer .sender-label {
+            text-align: left;
+        }
+        
+        .seller .sender-label {
+            text-align: right;
+        }
+        
+        .export-btn {
+            margin: 0 20px 20px 20px;
+            padding: 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .export-btn:hover {
+            background: #218838;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 40px 20px;
+        }
+        
+        .count-display {
+            font-size: 12px;
+            color: #667eea;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐼 판다 골프채 채팅</h1>
+            <p>실제같은 중고거래 대화를 생성해보세요</p>
+        </div>
+        
+        <div class="controls">
+            <div class="gender-section">
+                <div class="gender-group">
+                    <label for="buyerGender">구매자 성별</label>
+                    <select id="buyerGender">
+                        <option value="male">남성</option>
+                        <option value="female">여성</option>
+                    </select>
+                </div>
+                <div class="gender-group">
+                    <label for="sellerGender">판매자 성별</label>
+                    <select id="sellerGender">
+                        <option value="male">남성</option>
+                        <option value="female">여성</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label for="messageCount">메시지 개수</label>
+                <input type="range" id="messageCount" min="4" max="12" value="7">
+                <div class="count-display" id="countDisplay">7개</div>
+            </div>
+            
+            <button class="generate-btn" onclick="generateChat()">
+                🎲 채팅 생성하기
+            </button>
+        </div>
+        
+        <div class="chat-container" id="chatContainer">
+            <div class="empty-state">
+                위 버튼을 클릭하여 채팅을 생성해보세요
+            </div>
+        </div>
+        
+        <button class="export-btn" onclick="exportChat()" style="display: none;" id="exportBtn">
+            📋 텍스트로 복사
+        </button>
+    </div>
+
+    <script>
+        const chatData = {
+            openings: {
+                male_buyer: [
+                    '안녕하세요, 판다 중고 골프채 보고 연락드렸습니다',
+                    '판다 골프채 글 보고 연락드립니다',
+                    '안녕하세요 중고 골프채 아직 판매중인가요?',
+                    '골프채 판매글 보고 연락했습니다',
+                    '중고 골프채 보고 연락드립니다'
+                ],
+                female_buyer: [
+                    '안녕하세요~ 판다 중고 골프채 보고 연락드려요',
+                    '안녕하세요! 판다 골프채 글 보고 연락했어요',
+                    '판다에서 골프채 보고 연락드립니다^^',
+                    '안녕하세요 중고 골프채 아직 팔고 계신가요?',
+                    '골프채 보고 연락했어요~'
+                ]
+            },
+            responses: {
+                male_seller: ['네 안녕하세요', '네 연락 감사합니다', '네 판매중입니다', '안녕하세요'],
+                female_seller: ['네~ 안녕하세요!', '네 연락 감사해요', '네 아직 판매중이에요', '안녕하세요~']
+            },
+            questionAnswers: {
+                state: {
+                    questions: {
+                        male: ['상태는 어떤 편인가요?', '어떤 상태인가요?'],
+                        female: ['상태는 어떤가요~?', '상태 어떤 편이에요?']
+                    },
+                    answers: {
+                        male: ['상태는 밴드에 올려놓은 사진 그대로입니다', '밴드에 올린 사진대로 상태 좋아요'],
+                        female: ['상태는 밴드에 올려놓은 사진 그대로예요~', '밴드에 올린 사진대로 상태 괜찮아요']
+                    }
+                },
+                spec: {
+                    questions: {
+                        male: ['브랜드가 어떻게 되나요?', '스펙이 어떻게 되나요?', '로프트각도가 어떻게 되나요?'],
+                        female: ['브랜드 뭔지 알 수 있을까요?', '스펙이 어떻게 되나요?', '로프트각 몇 도인가요?']
+                    },
+                    answers: {
+                        male: ['상세 정보는 밴드 글에 있어요', '사진에서 확인 가능합니다'],
+                        female: ['상세 정보는 밴드 글에 있어요~', '사진에서 확인 가능해요']
+                    }
+                },
+                accessory: {
+                    questions: {
+                        male: ['박스나 구성품도 다 있나요?', '헤드커버도 있나요?', '케이스나 가방도 있나요?'],
+                        female: ['구성품도 다 있나요?', '헤드커버도 있나요?', '케이스도 같이 주시나요?']
+                    },
+                    answers: {
+                        male: ['헤드커버만 있어요', '박스는 없고 헤드커버만 있습니다'],
+                        female: ['헤드커버만 있어요~', '박스는 없고 헤드커버만 있어요']
+                    }
+                },
+                usage: {
+                    questions: {
+                        male: ['언제 구매하신 건가요?', '사용 기간은 얼마나 되셨나요?', '얼마나 사용하셨나요?'],
+                        female: ['언제 사신 거예요?', '얼마나 쓰신 건가요?', '사용감 많이 있나요?']
+                    },
+                    answers: {
+                        male: ['작년에 샀는데 몇 번 안 썼어요', '6개월 정도 사용했습니다'],
+                        female: ['작년에 샀는데 몇 번 안 썼어요~', '6개월 정도 사용했어요']
+                    }
+                },
+                damage: {
+                    questions: {
+                        male: ['A/S 받은 적 있나요?', '수리한 적은 없나요?', '고장 난 적은 없나요?'],
+                        female: ['고장 난 적은 없나요?', '수리 이력 있나요?', '혹시 흠집 있나요?']
+                    },
+                    answers: {
+                        male: ['수리한 적 없어요', 'A/S 받은 적 없습니다'],
+                        female: ['수리한 적 없어요~', 'A/S 받은 적 없어요']
+                    }
+                },
+                grip: {
+                    questions: {
+                        male: ['그립 상태는 어떤가요?', '그립 교체는 언제 하셨나요?'],
+                        female: ['그립 상태는 어떤가요?', '그립 교체 필요한가요?']
+                    },
+                    answers: {
+                        male: ['그립은 아직 괜찮아요', '그립 상태 양호합니다'],
+                        female: ['그립은 아직 괜찮아요~', '그립 상태 양호해요']
+                    }
+                },
+                meetup: {
+                    questions: {
+                        male: ['직거래 가능한가요?', '언제 만날 수 있을까요?', '혹시 언제 거래 가능하실까요?'],
+                        female: ['직거래 가능하신가요?', '혹시 언제 만날 수 있을까요?', '확인해보고 바로 가져가고 싶어요!']
+                    },
+                    answers: {
+                        male: ['직거래 가능합니다', '언제 시간 되세요?', '만날 수 있는 시간 알려주세요'],
+                        female: ['직거래 가능해요~', '언제 시간 되세요?', '시간 맞춰서 만날 수 있어요']
+                    }
+                },
+                time: {
+                    questions: {
+                        male: ['시간 맞으시면 오늘도 가능한가요?', '주말에도 만날 수 있을까요?'],
+                        female: ['시간 되시면 오늘도 괜찮아요~', '주말에 만날 수 있을까요?']
+                    },
+                    answers: {
+                        male: ['오늘도 가능합니다', '주말도 가능해요'],
+                        female: ['오늘도 가능해요~', '주말도 괜찮아요']
+                    }
+                }
+            }
+        };
+
+        function generateContextualChat(buyerGender, sellerGender, messageCount) {
+            const messages = [];
+            
+            // 1. 구매자 인사
+            const openings = chatData.openings[`${buyerGender}_buyer`];
+            messages.push({
+                sender: 'buyer',
+                text: openings[Math.floor(Math.random() * openings.length)]
+            });
+            
+            // 2. 판매자 응답
+            const responses = chatData.responses[`${sellerGender}_seller`];
+            messages.push({
+                sender: 'seller',
+                text: responses[Math.floor(Math.random() * responses.length)]
+            });
+            
+            // 3. 질문-답변 쌍으로 나머지 대화 구성
+            const questionTypes = Object.keys(chatData.questionAnswers);
+            const usedTypes = new Set();
+            
+            for (let i = 2; i < messageCount - 1; i += 2) {
+                const availableTypes = questionTypes.filter(type => !usedTypes.has(type));
+                if (availableTypes.length === 0) break;
+                
+                const selectedType = availableTypes[Math.floor(Math.random() * availableTypes.length)];
+                const qaPair = chatData.questionAnswers[selectedType];
+                
+                // 구매자 질문
+                const questions = qaPair.questions[buyerGender];
+                const question = questions[Math.floor(Math.random() * questions.length)];
+                messages.push({
+                    sender: 'buyer',
+                    text: question
+                });
+                
+                // 판매자 답변
+                if (i + 1 < messageCount) {
+                    const answers = qaPair.answers[sellerGender];
+                    const answer = answers[Math.floor(Math.random() * answers.length)];
+                    messages.push({
+                        sender: 'seller',
+                        text: answer
+                    });
+                }
+                
+                usedTypes.add(selectedType);
+            }
+            
+            // 마지막이 구매자 메시지면 판매자 마무리 답변 추가
+            if (messages.length < messageCount && messages[messages.length - 1].sender === 'buyer') {
+                const finalAnswers = sellerGender === 'male' ? 
+                    ['더 궁금한 거 있으면 연락주세요', '실물 보시고 결정하셔도 됩니다'] :
+                    ['더 궁금한 거 있으면 연락주세요~', '실물 보시고 결정하셔도 돼요'];
+                
+                messages.push({
+                    sender: 'seller',
+                    text: finalAnswers[Math.floor(Math.random() * finalAnswers.length)]
+                });
+            }
+            
+            return messages.slice(0, messageCount);
+        }
+
+        // 슬라이더 값 표시
+        document.getElementById('messageCount').addEventListener('input', function(e) {
+            document.getElementById('countDisplay').textContent = e.target.value + '개';
+        });
+
+        function generateChat() {
+            const buyerGender = document.getElementById('buyerGender').value;
+            const sellerGender = document.getElementById('sellerGender').value;
+            const messageCount = parseInt(document.getElementById('messageCount').value);
+            const chatContainer = document.getElementById('chatContainer');
+            const exportBtn = document.getElementById('exportBtn');
+            
+            chatContainer.innerHTML = '';
+            
+            const messages = generateContextualChat(buyerGender, sellerGender, messageCount);
+            
+            messages.forEach((message, index) => {
+                setTimeout(() => {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `message ${message.sender}`;
+                    
+                    const senderLabel = message.sender === 'buyer' ? '구매자:' : '판매자:';
+                    
+                    messageDiv.innerHTML = `
+                        <div class="message-content">
+                            <div class="sender-label">${senderLabel}</div>
+                            <div class="message-bubble">${message.text}</div>
+                        </div>
+                    `;
+                    
+                    chatContainer.appendChild(messageDiv);
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }, index * 200);
+            });
+            
+            exportBtn.style.display = 'block';
+        }
+
+        function exportChat() {
+            const messages = document.querySelectorAll('.message');
+            let chatText = '';
+            
+            messages.forEach(message => {
+                const sender = message.querySelector('.sender-label').textContent;
+                const text = message.querySelector('.message-bubble').textContent;
+                chatText += `${sender}\n${text}\n\n`;
+            });
+            
+            navigator.clipboard.writeText(chatText).then(() => {
+                const btn = document.getElementById('exportBtn');
+                const originalText = btn.textContent;
+                btn.textContent = '✅ 복사완료!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            });
+        }
+
+        // 초기 채팅 생성
+        generateChat();
+    </script>
+</body>
+</html>
